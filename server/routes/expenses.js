@@ -13,6 +13,20 @@ router.post('/', async (req, res) => {
   }
 })
 
+// Update an expense
+router.put('/:id', async (req, res) => {
+  try {
+    const updatedExpense = await Expense.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    )
+    res.json(updatedExpense)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // Get all expenses
 router.get('/', async (req, res) => {
   try {

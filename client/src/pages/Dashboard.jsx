@@ -1,5 +1,5 @@
+import { addExpense, getExpenses, deleteExpense, updateExpense } from "../api/expenses"
 import { useState, useEffect } from "react"
-import { addExpense, getExpenses, deleteExpense } from "../api/expenses"
 import { setBudget, getBudget } from "../api/budget"
 import { Pie, Bar } from "react-chartjs-2"
 import {
@@ -22,6 +22,7 @@ function Dashboard() {
   const [expenses, setExpenses] = useState([])
   const [budgetInput, setBudgetInput] = useState("")
   const [budget, setBudgetValue] = useState(0)
+  const [editingId, setEditingId] = useState(null)
 
   const currentMonth = new Date().toISOString().slice(0, 7) // e.g. "2026-06"
 
@@ -41,14 +42,26 @@ function Dashboard() {
   }, [])
 
   const handleAddExpense = async (e) => {
-    e.preventDefault()
+  e.preventDefault()
+  if (editingId) {
+    await updateExpense(editingId, { amount, category, date, note })
+    setEditingId(null)
+  } else {
     await addExpense({ amount, category, date, note })
-    setAmount("")
-    setCategory("Food")
-    setDate("")
-    setNote("")
-    fetchExpenses()
   }
+  setAmount("")
+  setCategory("Food")
+  setDate("")
+  setNote("")
+  fetchExpenses()
+}
+  const handleEditClick = (exp) => {
+  setEditingId(exp._id)
+  setAmount(exp.amount)
+  setCategory(exp.category)
+  setDate(exp.date?.slice(0, 10))
+  setNote(exp.note || "")
+}
 
   const handleDelete = async (id) => {
     await deleteExpense(id)
@@ -150,7 +163,7 @@ function Dashboard() {
 
       {/* Add Expense Form */}
       <div className="bg-white p-6 rounded-xl shadow-md max-w-md mx-auto mb-6">
-        <h2 className="text-xl font-semibold mb-4">Add Expense</h2>
+        <h2 className="text-xl font-semibold mb-4">{editingId ? "Edit Expense" : "Add Expense"}</h2>
         <form onSubmit={handleAddExpense}>
           <input
             type="number"
@@ -185,13 +198,10 @@ function Dashboard() {
             onChange={(e) => setNote(e.target.value)}
             className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-purple-400"
           />
-          <button
-            type="submit"
-            className="w-full bg-purple-600 text-white py-2 rounded-lg font-semibold hover:bg-purple-700 transition"
-          >
-            Add Expense
-          </button>
-        </form>
+         <button type="submit" className="w-full bg-purple-600 text-white py-2 rounded-lg font-semibold hover:bg-purple-700 transition">
+            {editingId ? "Update Expense" : "Add Expense"}
+            </button>
+          </form>
       </div>
 
       {/* Charts */}
@@ -234,12 +244,18 @@ function Dashboard() {
                     {exp.date?.slice(0, 10)} {exp.note && `- ${exp.note}`}
                   </p>
                 </div>
-                <button
-                  onClick={() => handleDelete(exp._id)}
+                <div className="flex gap-3">
+                  <button
+                  onClick={()=>handleEditClick(exp)}
+                  className="text-blue-500 hover:text-blue-700 text-sm font-medium">
+                  Edit
+                  </button>
+                  <button onClick={() => handleDelete(exp._id)}
                   className="text-red-500 hover:text-red-700 text-sm font-medium"
-                >
-                  Delete
-                </button>
+             >
+              Delete
+              </button>
+              </div>
               </li>
             ))}
           </ul>

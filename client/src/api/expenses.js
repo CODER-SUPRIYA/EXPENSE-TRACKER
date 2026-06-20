@@ -20,3 +20,11 @@ export const deleteExpense = async (id) => {
   })
   return res.json()
 }
+export const updateExpense = async (id, expenseData) => {
+  const res = await fetch(`${API_URL}/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(expenseData)
+  })
+  return res.json()
+}
