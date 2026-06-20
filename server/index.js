@@ -19,6 +19,9 @@ app.get('/api/test', (req, res) => {
 const expenseRoutes = require('./routes/expenses')
 app.use('/api/expenses', expenseRoutes)
 
+const budgetRoutes = require('./routes/budget')
+app.use('/api/budget', budgetRoutes)
+
 app.listen(process.env.PORT, () => {
   console.log(`Server running on port ${process.env.PORT}`)
 })
