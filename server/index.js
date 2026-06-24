@@ -22,6 +22,9 @@ app.use('/api/expenses', expenseRoutes)
 const budgetRoutes = require('./routes/budget')
 app.use('/api/budget', budgetRoutes)
 
+const authRoutes = require('./routes/auth')
+app.use('/api/auth', authRoutes)
+
 app.listen(process.env.PORT, () => {
   console.log(`Server running on port ${process.env.PORT}`)
 })

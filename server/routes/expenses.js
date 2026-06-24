@@ -1,11 +1,12 @@
 const express = require('express')
 const router = express.Router()
 const Expense = require('../models/Expense')
+const authMiddleware = require('../middleware/auth')
 
 // Add new expense
-router.post('/', async (req, res) => {
+router.post('/', authMiddleware, async (req, res) => {
   try {
-    const expense = new Expense(req.body)
+    const expense = new Expense({ ...req.body, userId: req.userId })
     await expense.save()
     res.status(201).json(expense)
   } catch (err) {
@@ -14,10 +15,10 @@ router.post('/', async (req, res) => {
 })
 
 // Update an expense
-router.put('/:id', async (req, res) => {
+router.put('/:id', authMiddleware, async (req, res) => {
   try {
-    const updatedExpense = await Expense.findByIdAndUpdate(
-      req.params.id,
+    const updatedExpense = await Expense.findOneAndUpdate(
+      { _id: req.params.id, userId: req.userId },
       req.body,
       { new: true }
     )
@@ -27,10 +28,10 @@ router.put('/:id', async (req, res) => {
   }
 })
 
-// Get all expenses
-router.get('/', async (req, res) => {
+// Get all expenses for logged-in user only
+router.get('/', authMiddleware, async (req, res) => {
   try {
-    const expenses = await Expense.find().sort({ date: -1 })
+    const expenses = await Expense.find({ userId: req.userId }).sort({ date: -1 })
     res.json(expenses)
   } catch (err) {
     res.status(500).json({ error: err.message })
@@ -38,9 +39,9 @@ router.get('/', async (req, res) => {
 })
 
 // Delete an expense
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authMiddleware, async (req, res) => {
   try {
-    await Expense.findByIdAndDelete(req.params.id)
+    await Expense.findOneAndDelete({ _id: req.params.id, userId: req.userId })
     res.json({ message: 'Expense deleted' })
   } catch (err) {
     res.status(500).json({ error: err.message })

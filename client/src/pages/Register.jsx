@@ -1,18 +1,24 @@
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { registerUser } from "../api/auth"
 
 function Register() {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const navigate = useNavigate()
 
-  const handleRegister = (e) => {
-    e.preventDefault()
-    console.log("Name:", name)
-    console.log("Email:", email)
-    console.log("Password:", password)
-    alert("Register button clicked! We will connect to backend soon.")
+  const handleRegister = async (e) => {
+  e.preventDefault()
+  const data = await registerUser({ name, email, password })
+  if (data.token) {
+    localStorage.setItem("token", data.token)
+    localStorage.setItem("user", JSON.stringify(data.user))
+    navigate("/dashboard")
+  } else {
+    alert(data.error || "Registration failed")
   }
-
+}
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
       <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md">

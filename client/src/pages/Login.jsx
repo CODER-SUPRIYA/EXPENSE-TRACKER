@@ -1,15 +1,23 @@
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { loginUser } from "../api/auth"
 
 function Login() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const navigate = useNavigate()
 
-  const handleLogin = (e) => {
-    e.preventDefault()
-    console.log("Email:", email)
-    console.log("Password:", password)
-    alert("Login button clicked! We will connect to backend soon.")
+  const handleLogin = async (e) => {
+  e.preventDefault()
+  const data = await loginUser({ email, password })
+  if (data.token) {
+    localStorage.setItem("token", data.token)
+    localStorage.setItem("user", JSON.stringify(data.user))
+    navigate("/dashboard")
+  } else {
+    alert(data.error || "Login failed")
   }
+}
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">

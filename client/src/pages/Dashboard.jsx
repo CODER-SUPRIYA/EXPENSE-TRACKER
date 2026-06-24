@@ -2,6 +2,9 @@ import { addExpense, getExpenses, deleteExpense, updateExpense } from "../api/ex
 import { useState, useEffect } from "react"
 import { setBudget, getBudget } from "../api/budget"
 import { Pie, Bar } from "react-chartjs-2"
+import Navbar from "../components/Navbar"
+
+import { useNavigate } from "react-router-dom"
 import {
   Chart as ChartJS,
   ArcElement,
@@ -36,10 +39,16 @@ function Dashboard() {
     setBudgetValue(data.amount || 0)
   }
 
-  useEffect(() => {
-    fetchExpenses()
-    fetchBudget()
-  }, [])
+ const navigate = useNavigate()
+
+useEffect(() => {
+  const token = localStorage.getItem("token")
+  if (!token) {
+    navigate("/login")
+  }
+}, [])
+
+
 
   const handleAddExpense = async (e) => {
   e.preventDefault()
@@ -119,15 +128,16 @@ function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">
-        Expense Dashboard
-      </h1>
+    <div className="min-h-screen bg-gray-100">
+  <Navbar />
+  <div className="p-6"></div>
+      <h1 className="text-3xl font-bold text-gray-800 text-center mb-6">Expense Dashboard</h1>
+
 
       {/* Budget Section */}
-      <div className="bg-white p-6 rounded-xl shadow-md max-w-md mx-auto mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-3 max-w-4xl mx-auto mb-6">
         <h2 className="text-xl font-semibold mb-4">Monthly Budget</h2>
-        <form onSubmit={handleSetBudget} className="flex gap-2 mb-4">
+        <form onSubmit={handleSetBudget} className="flex flex-col sm:flex-row gap-2 mb-4">
           <input
             type="number"
             placeholder="Set budget amount"
@@ -136,11 +146,8 @@ function Dashboard() {
             className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400"
             required
           />
-          <button
-            type="submit"
-            className="bg-purple-600 text-white px-4 rounded-lg font-semibold hover:bg-purple-700 transition"
-          >
-            Set
+          <button type="submit"  className="bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-700 transition">
+          Set
           </button>
         </form>
         <p className="text-sm text-gray-600 mb-2">
