@@ -1,5 +1,4 @@
-const API_URL = "http://localhost:5000/api/budget"
-
+const API_URL = "https://expense-tracker-api-5a21.onrender.com/api/budget"
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token")
   return {

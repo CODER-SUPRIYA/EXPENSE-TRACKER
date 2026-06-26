@@ -1,5 +1,4 @@
-const API_URL = "http://localhost:5000/api/auth"
-
+const API_URL = "https://expense-tracker-api-5a21.onrender.com/api/auth"
 export const registerUser = async (userData) => {
   const res = await fetch(`${API_URL}/register`, {
     method: "POST",
