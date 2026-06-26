@@ -29,15 +29,24 @@ function Dashboard() {
 
   const currentMonth = new Date().toISOString().slice(0, 7) // e.g. "2026-06"
 
-  const fetchExpenses = async () => {
+ const fetchExpenses = async () => {
+  try {
     const data = await getExpenses()
-    setExpenses(data)
+    if (Array.isArray(data)) setExpenses(data)
+    else setExpenses([])
+  } catch (err) {
+    setExpenses([])
   }
+}
 
   const fetchBudget = async () => {
+  try {
     const data = await getBudget(currentMonth)
     setBudgetValue(data.amount || 0)
+  } catch (err) {
+    setBudgetValue(0)
   }
+}
 
  const navigate = useNavigate()
 
@@ -45,13 +54,26 @@ useEffect(() => {
   const token = localStorage.getItem("token")
   if (!token) {
     navigate("/login")
+    return
   }
+  fetchExpenses()
+  fetchBudget()
 }, [])
 
 
 
-  const handleAddExpense = async (e) => {
+  const [errors, setErrors] = useState({})
+
+const handleAddExpense = async (e) => {
   e.preventDefault()
+
+  // Validation
+  const newErrors = {}
+  if (!amount || Number(amount) <= 0) newErrors.amount = "Enter a valid amount"
+  if (!date) newErrors.date = "Please select a date"
+  setErrors(newErrors)
+  if (Object.keys(newErrors).length > 0) return
+
   if (editingId) {
     await updateExpense(editingId, { amount, category, date, note })
     setEditingId(null)
@@ -62,6 +84,7 @@ useEffect(() => {
   setCategory("Food")
   setDate("")
   setNote("")
+  setErrors({})
   fetchExpenses()
 }
   const handleEditClick = (exp) => {
@@ -70,6 +93,9 @@ useEffect(() => {
   setCategory(exp.category)
   setDate(exp.date?.slice(0, 10))
   setNote(exp.note || "")
+  setErrors({})
+  // Scroll to form on mobile
+  window.scrollTo({ top: 0, behavior: "smooth" })
 }
 
   const handleDelete = async (id) => {
@@ -133,6 +159,31 @@ useEffect(() => {
   <div className="p-6"></div>
       <h1 className="text-3xl font-bold text-gray-800 text-center mb-6">Expense Dashboard</h1>
 
+{/* Monthly Summary Cards */}
+<div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl mx-auto mb-6">
+  <div className="bg-white p-5 rounded-xl shadow-md text-center">
+    <p className="text-sm text-gray-500 mb-1">Total Spent</p>
+    <p className="text-3xl font-bold text-purple-600">₹{totalSpent}</p>
+    <p className="text-xs text-gray-400 mt-1">this month</p>
+  </div>
+  <div className="bg-white p-5 rounded-xl shadow-md text-center">
+    <p className="text-sm text-gray-500 mb-1">Transactions</p>
+    <p className="text-3xl font-bold text-blue-500">{monthExpenses.length}</p>
+    <p className="text-xs text-gray-400 mt-1">this month</p>
+  </div>
+  <div className="bg-white p-5 rounded-xl shadow-md text-center">
+    <p className="text-sm text-gray-500 mb-1">Top Category</p>
+    <p className="text-3xl font-bold text-green-500">
+      {monthExpenses.length > 0
+        ? categories.reduce((a, b) =>
+            categoryTotals[categories.indexOf(a)] >= categoryTotals[categories.indexOf(b)] ? a : b
+          )
+        : "-"}
+    </p>
+    <p className="text-xs text-gray-400 mt-1">highest spending</p>
+  </div>
+</div>
+
 
       {/* Budget Section */}
       <div className="flex flex-col sm:flex-row justify-between items-center gap-3 max-w-4xl mx-auto mb-6">
@@ -173,13 +224,15 @@ useEffect(() => {
         <h2 className="text-xl font-semibold mb-4">{editingId ? "Edit Expense" : "Add Expense"}</h2>
         <form onSubmit={handleAddExpense}>
           <input
-            type="number"
-            placeholder="Amount"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-purple-400"
-            required
-          />
+  type="number"
+  placeholder="Amount"
+  value={amount}
+  onChange={(e) => setAmount(e.target.value)}
+  className={`w-full border rounded-lg px-4 py-2 mb-1 focus:outline-none focus:ring-2 focus:ring-purple-400 ${
+    errors.amount ? "border-red-400" : "border-gray-300"
+  }`}
+/>
+{errors.amount && <p className="text-red-500 text-xs mb-2">{errors.amount}</p>}
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
@@ -191,13 +244,15 @@ useEffect(() => {
             <option>Bills</option>
             <option>Other</option>
           </select>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-purple-400"
-            required
-          />
+         <input
+  type="date"
+  value={date}
+  onChange={(e) => setDate(e.target.value)}
+  className={`w-full border rounded-lg px-4 py-2 mb-1 focus:outline-none focus:ring-2 focus:ring-purple-400 ${
+    errors.date ? "border-red-400" : "border-gray-300"
+  }`}
+/>
+{errors.amount && <p className="text-red-500 text-xs mb-2">{errors.amount}</p>}
           <input
             type="text"
             placeholder="Note (optional)"
@@ -206,8 +261,24 @@ useEffect(() => {
             className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-purple-400"
           />
          <button type="submit" className="w-full bg-purple-600 text-white py-2 rounded-lg font-semibold hover:bg-purple-700 transition">
-            {editingId ? "Update Expense" : "Add Expense"}
-            </button>
+  {editingId ? "Update Expense" : "Add Expense"}
+</button>
+{editingId && (
+  <button
+    type="button"
+    onClick={() => {
+      setEditingId(null)
+      setAmount("")
+      setCategory("Food")
+      setDate("")
+      setNote("")
+      setErrors({})
+    }}
+    className="w-full mt-2 border border-gray-300 text-gray-600 py-2 rounded-lg font-semibold hover:bg-gray-100 transition"
+  >
+    Cancel
+  </button>
+)}
           </form>
       </div>
 
