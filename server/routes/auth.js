@@ -8,6 +8,7 @@ const users = []
 let nextId = 1
 
 router.post('/register', (req, res) => {
+  console.log('Register body:', req.body)
   const { name, email, password } = req.body
   if (!name || !email || !password)
     return res.status(400).json({ error: 'All fields required' })
@@ -24,6 +25,7 @@ router.post('/register', (req, res) => {
 })
 
 router.post('/login', (req, res) => {
+  console.log('Login body:', req.body)
   const { email, password } = req.body
   const user = users.find(u => u.email === email && u.password === password)
   if (!user)
